@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mehweb Data</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datasource@0.1.0"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.0/xlsx.full.min.js"></script>
+</head>
+<body>
+
+<div style="margin: 5%; vertical-align: center"><canvas id="myChart"></canvas></div>
+
+<script type="text/javascript">
+    function random_rgba_value(offset) {
+        return offset + Math.floor(Math.random() * (255 - offset * 2));
+    }
+
+    class RGBA {
+        constructor(r, g, b) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+        }
+
+        fillAlpha(alpha) {
+            return 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + alpha + ')';
+        }
+
+        offsetAndFillAlpha(offset, alpha) {
+            return 'rgba(' + (this.r - offset) + ',' + (this.g - offset) + ',' + (this.b - offset) + ',' + alpha + ')';
+        }
+
+        toString() {
+            return '(' + this.r + ',' + this.g + ',' + this.b + ')';
+        }
+
+    }
+
+    class RandomRGBAColorsList {
+        constructor(length, offset) {
+            var temp = [];
+
+            for (var i = 0; i < length; i++) {
+                temp.push(new RGBA(random_rgba_value(offset), random_rgba_value(offset), random_rgba_value(offset)));
+            }
+
+            this.colors = temp;
+            this.offset = offset;
+        }
+
+        fillAlpha(alpha) {
+            var colors_to_return = [];
+            for (var i = 0; i < this.colors.length; i++) {
+                colors_to_return.push(this.colors[i].fillAlpha(alpha));
+            }
+
+            return colors_to_return;
+        }
+
+        offsetAndFillAlpha(alpha) {
+            var colors_to_return = [];
+            for (var i = 0; i < this.colors.length; i++) {
+                colors_to_return.push(this.colors[i].offsetAndFillAlpha(this.offset, alpha));
+                colors_to_return.push(this.colors[i].offsetAndFillAlpha(-this.offset, alpha));
+            }
+
+            return colors_to_return;
+        }
+    }
+
+
+    var mcol = new RandomRGBAColorsList(1, 0).colors[0].fillAlpha(0.7);
+    var fcol = new RandomRGBAColorsList(1, 50).colors[0].fillAlpha(0.7);
+    var ctx = document.getElementById('myChart').getContext('2d');
+    var chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            datasets: [{
+                type: 'bar',
+                backgroundColor: fcol
+            },{
+                type: 'bar',
+                backgroundColor: mcol
+            }]
+        },
+        plugins: [ChartDataSource],
+        options: {
+            title: {
+                display: true,
+                text: 'Speaker distribution',
+                fontSize: 20
+            },
+            plugins: {
+                datasource: {
+                    type: 'csv',
+                    url: 'https://docs.google.com/spreadsheets/d/1vZSn8GGLwzzm_JcHEuYFU-07y4Xdk4utRwAj_4-_utU/gviz/tq?tqx=out:csv&sheet=speaker_distr',
+                    delimiter: ',',
+                    rowMapping: 'dataset',
+                    datasetLabels: true,
+                    indexLabels: true
+                }
+            }
+        }
+    });
+
+</script>
+
+</body>
+</html>
