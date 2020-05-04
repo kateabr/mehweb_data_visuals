@@ -15,8 +15,8 @@
 
 <div style="width: 80%; margin-right: auto; margin-left: auto; margin-bottom: 5%; vertical-align: center">
     <p>
-        <h6 class="display-4">Speaker distribution</h6>
-        <canvas id="speakersChart"></canvas>
+    <h6 class="display-4">Speaker distribution</h6>
+    <canvas id="speakersChart" height="110vh"></canvas>
     </p>
 
     <script type="text/javascript">
@@ -112,6 +112,18 @@
                         datasetLabels: true,
                         indexLabels: true
                     }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            callback: function (value) {
+                                if (value % 1 === 0) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }]
                 }
             }
         });
