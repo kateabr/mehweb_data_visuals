@@ -6,106 +6,159 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datasource@0.1.0"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.0/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://unpkg.com/papaparse@latest/papaparse.min.js"></script>
+
 </head>
 <body>
 
-<div style="margin: 5%; vertical-align: center"><canvas id="myChart"></canvas></div>
+<div style="width: 80%; margin-right: auto; margin-left: auto; margin-bottom: 5%; vertical-align: center">
+    <p>
+        <h6 class="display-4">Speaker distribution</h6>
+        <canvas id="speakersChart"></canvas>
+    </p>
 
-<script type="text/javascript">
-    function random_rgba_value(offset) {
-        return offset + Math.floor(Math.random() * (255 - offset * 2));
-    }
-
-    class RGBA {
-        constructor(r, g, b) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
+    <script type="text/javascript">
+        function random_rgba_value(offset) {
+            return offset + Math.floor(Math.random() * (255 - offset * 2));
         }
 
-        fillAlpha(alpha) {
-            return 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + alpha + ')';
-        }
-
-        offsetAndFillAlpha(offset, alpha) {
-            return 'rgba(' + (this.r - offset) + ',' + (this.g - offset) + ',' + (this.b - offset) + ',' + alpha + ')';
-        }
-
-        toString() {
-            return '(' + this.r + ',' + this.g + ',' + this.b + ')';
-        }
-
-    }
-
-    class RandomRGBAColorsList {
-        constructor(length, offset) {
-            var temp = [];
-
-            for (var i = 0; i < length; i++) {
-                temp.push(new RGBA(random_rgba_value(offset), random_rgba_value(offset), random_rgba_value(offset)));
+        class RGBA {
+            constructor(r, g, b) {
+                this.r = r;
+                this.g = g;
+                this.b = b;
             }
 
-            this.colors = temp;
-            this.offset = offset;
-        }
-
-        fillAlpha(alpha) {
-            var colors_to_return = [];
-            for (var i = 0; i < this.colors.length; i++) {
-                colors_to_return.push(this.colors[i].fillAlpha(alpha));
+            fillAlpha(alpha) {
+                return 'rgba(' + this.r + ',' + this.g + ',' + this.b + ',' + alpha + ')';
             }
 
-            return colors_to_return;
-        }
-
-        offsetAndFillAlpha(alpha) {
-            var colors_to_return = [];
-            for (var i = 0; i < this.colors.length; i++) {
-                colors_to_return.push(this.colors[i].offsetAndFillAlpha(this.offset, alpha));
-                colors_to_return.push(this.colors[i].offsetAndFillAlpha(-this.offset, alpha));
+            offsetAndFillAlpha(offset, alpha) {
+                return 'rgba(' + (this.r - offset) + ',' + (this.g - offset) + ',' + (this.b - offset) + ',' + alpha + ')';
             }
 
-            return colors_to_return;
+            toString() {
+                return '(' + this.r + ',' + this.g + ',' + this.b + ')';
+            }
+
         }
-    }
+
+        class RandomRGBAColorsList {
+            constructor(length, offset) {
+                var temp = [];
+
+                for (var i = 0; i < length; i++) {
+                    temp.push(new RGBA(random_rgba_value(offset), random_rgba_value(offset), random_rgba_value(offset)));
+                }
+
+                this.colors = temp;
+                this.offset = offset;
+            }
+
+            fillAlpha(alpha) {
+                var colors_to_return = [];
+                for (var i = 0; i < this.colors.length; i++) {
+                    colors_to_return.push(this.colors[i].fillAlpha(alpha));
+                }
+
+                return colors_to_return;
+            }
+
+            offsetAndFillAlpha(alpha) {
+                var colors_to_return = [];
+                for (var i = 0; i < this.colors.length; i++) {
+                    colors_to_return.push(this.colors[i].offsetAndFillAlpha(this.offset, alpha));
+                    colors_to_return.push(this.colors[i].offsetAndFillAlpha(-this.offset, alpha));
+                }
+
+                return colors_to_return;
+            }
+        }
 
 
-    var mcol = new RandomRGBAColorsList(1, 0).colors[0].fillAlpha(0.7);
-    var fcol = new RandomRGBAColorsList(1, 50).colors[0].fillAlpha(0.7);
-    var ctx = document.getElementById('myChart').getContext('2d');
-    var chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            datasets: [{
-                type: 'bar',
-                backgroundColor: fcol
-            },{
-                type: 'bar',
-                backgroundColor: mcol
-            }]
-        },
-        plugins: [ChartDataSource],
-        options: {
-            title: {
-                display: true,
-                text: 'Speaker distribution',
-                fontSize: 20
+        var mcol = new RandomRGBAColorsList(1, 0).colors[0].fillAlpha(0.7);
+        var fcol = new RandomRGBAColorsList(1, 50).colors[0].fillAlpha(0.7);
+        var ctx = document.getElementById('speakersChart').getContext('2d');
+        var chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                datasets: [{
+                    type: 'bar',
+                    backgroundColor: fcol
+                }, {
+                    type: 'bar',
+                    backgroundColor: mcol
+                }]
             },
-            plugins: {
-                datasource: {
-                    type: 'csv',
-                    url: 'https://docs.google.com/spreadsheets/d/1vZSn8GGLwzzm_JcHEuYFU-07y4Xdk4utRwAj_4-_utU/gviz/tq?tqx=out:csv&sheet=speaker_distr',
-                    delimiter: ',',
-                    rowMapping: 'dataset',
-                    datasetLabels: true,
-                    indexLabels: true
+            plugins: [ChartDataSource],
+            options: {
+                title: {
+                    display: false,
+                    text: 'By year',
+                    position: 'bottom',
+                    fontSize: 16
+                },
+                legend: {
+                    position: 'bottom'
+                },
+                plugins: {
+                    datasource: {
+                        type: 'csv',
+                        url: 'https://docs.google.com/spreadsheets/d/1vZSn8GGLwzzm_JcHEuYFU-07y4Xdk4utRwAj_4-_utU/gviz/tq?tqx=out:csv&sheet=speaker_distr',
+                        delimiter: ',',
+                        rowMapping: 'dataset',
+                        datasetLabels: true,
+                        indexLabels: true
+                    }
                 }
             }
+        });
+
+    </script>
+
+
+    <p id="clansStats"></p>
+
+    <script type="text/javascript" charset="utf-8">
+        function displayHTMLTable(results) {
+            console.log('text');
+            var table = "<table class='table table-hover'><tr>";
+            var header = results.meta.fields
+            var rows = results.data;
+
+            header.forEach((item, index) => {
+                table += "<th>"
+                table += item
+                table += "</th>"
+            })
+
+            table += "</tr>"
+
+            rows.forEach((row, index) => {
+                    table += "<tr>"
+                    Object.values(row).forEach(item => {
+                        table += "<td>"
+                        table += item
+                        table += "</td>"
+                    });
+                    table += "</tr>"
+                }
+            );
+            table += "</table>"
+
+            console.log(table);
+            document.getElementById("clansStats").innerHTML = table;
         }
-    });
 
-</script>
-
+        Papa.parse("https://docs.google.com/spreadsheets/d/1vZSn8GGLwzzm_JcHEuYFU-07y4Xdk4utRwAj_4-_utU/gviz/tq?tqx=out:csv&sheet=clan_distr", {
+            download: true,
+            skipEmptyLines: true,
+            header: true,
+            complete: displayHTMLTable
+        });
+    </script>
+</div>
 </body>
 </html>
